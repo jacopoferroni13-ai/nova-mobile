@@ -13,7 +13,7 @@ const eur=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).fo
 function profit(){return state.income-state.spent}
 function cash(){return START+state.income-state.spent}
 function daysLeft(){return Math.max(0,DAYS-Math.floor((Date.now()-state.startedAt)/86400000))}
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2200)}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2600)}
 
 function render(){
  $('#cash').textContent=eur(cash()); $('#profit').textContent=eur(profit()); $('#spent').textContent=eur(state.spent); $('#days').textContent=daysLeft();
@@ -27,23 +27,58 @@ function render(){
 function escapeHtml(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
 function chooseModels(){
- const mem=navigator.deviceMemory||4;
- if(mem>=8) return ['DeepSeek-R1-Distill-Qwen-7B-q4f16_1-MLC','Hermes-3-Llama-3.2-3B-q4f16_1-MLC','Llama-3.2-1B-Instruct-q4f16_1-MLC'];
- if(mem>=4) return ['Hermes-3-Llama-3.2-3B-q4f16_1-MLC','Llama-3.2-1B-Instruct-q4f16_1-MLC'];
- return ['Llama-3.2-1B-Instruct-q4f16_1-MLC'];
+  // Mobile-safe order: start small. Trying a 3B/7B model first can exhaust the
+  // mobile GPU and make later fallbacks fail in the same browser session.
+  return [
+    'Llama-3.2-1B-Instruct-q4f16_1-MLC',
+    'SmolLM2-360M-Instruct-q4f32_1-MLC'
+  ];
 }
+
+async function getGpuInfo(){
+  if(!('gpu' in navigator)) return {ok:false,reason:'WebGPU non disponibile in questo browser'};
+  try{
+    const adapter=await navigator.gpu.requestAdapter();
+    if(!adapter) return {ok:false,reason:'Il browser vede WebGPU ma non trova una GPU compatibile'};
+    const lim=adapter.limits||{};
+    return {ok:true,reason:`WebGPU OK • buffer max ${Math.round((lim.maxBufferSize||0)/1048576)} MB`};
+  }catch(e){return {ok:false,reason:e?.message||String(e)}}
+}
+
 async function loadAI(){
  if(engine||busy)return; busy=true; $('#status').textContent='loading';
- if(!('gpu' in navigator)){busy=false; $('#status').textContent='no WebGPU'; toast('Chrome/WebGPU non disponibile'); return}
- const candidates=chooseModels(); let lastErr='';
+ const gpu=await getGpuInfo();
+ if(!gpu.ok){
+   busy=false; $('#status').textContent='no WebGPU';
+   $('#progressText').textContent=gpu.reason+' — Apri NOVA in Chrome aggiornato, non nel browser interno di altre app.';
+   toast('Serve Chrome con WebGPU attivo'); return;
+ }
+ $('#progressText').textContent=gpu.reason;
+ const candidates=chooseModels(); let errors=[];
  for(const m of candidates){
   try{
-   $('#modelName').textContent=m; $('#progressText').textContent='Primo download: può richiedere diversi minuti e alcuni GB.';
-   engine=await webllm.CreateMLCEngine(m,{initProgressCallback:(p)=>{const x=Math.max(0,Math.min(1,p.progress||0));$('#progressBar').style.width=(x*100)+'%';$('#progressText').textContent=p.text||`Caricamento ${Math.round(x*100)}%`;}});
-   modelId=m; $('#status').textContent='local'; $('#modelName').textContent=m; state.messages.push({role:'system',content:`Cervello locale attivo: ${m}. I messaggi e la contabilità restano sul telefono.`}); save(); busy=false; return;
-  }catch(e){lastErr=e?.message||String(e);engine=null;}
+   $('#modelName').textContent=m;
+   $('#progressText').textContent=`Provo ${m}. Primo download: resta su Wi‑Fi e non chiudere la pagina.`;
+   engine=await webllm.CreateMLCEngine(m,{initProgressCallback:(p)=>{
+     const x=Math.max(0,Math.min(1,p.progress||0));
+     $('#progressBar').style.width=(x*100)+'%';
+     $('#progressText').textContent=p.text||`Caricamento ${Math.round(x*100)}%`;
+   }});
+   modelId=m; $('#status').textContent='local'; $('#modelName').textContent=m;
+   state.messages.push({role:'system',content:`Cervello locale attivo: ${m}. I messaggi e la contabilità restano sul telefono.`});
+   save(); busy=false; return;
+  }catch(e){
+    const msg=e?.message||String(e);
+    errors.push(`${m}: ${msg}`);
+    engine=null;
+    $('#progressText').textContent=`Il modello non è partito. Provo una versione più leggera…`;
+    await new Promise(r=>setTimeout(r,500));
+  }
  }
- busy=false; $('#status').textContent='errore'; $('#progressText').textContent='Nessun modello compatibile: '+lastErr; toast('Il telefono non riesce a caricare il modello locale');
+ busy=false; $('#status').textContent='errore';
+ const detail=errors[errors.length-1]||'errore sconosciuto';
+ $('#progressText').textContent='Diagnostica: '+detail.slice(0,300);
+ toast('Modello locale non avviabile su questo browser/telefono');
 }
 
 const SYSTEM=`Sei NOVA, assistente AI personale privato. Missione: trasformare un capitale iniziale di €100 nel maggior profitto legale possibile in 90 giorni, richiedendo al proprietario massimo 15 minuti al giorno. Prima priorità: non perdere capitale inutilmente. Nessuna scommessa, leva, trading speculativo, spam, inganno, violazione di termini o legge. Ogni spesa richiede approvazione umana finché il profitto netto verificato non raggiunge €1000. Non fingere di aver fatto azioni che non puoi fare. Distingui fatti, ipotesi e cose da verificare. Preferisci attività ad alta leva e bassa gestione. Agisci come un team di agenti: Stratega, Scout, Critico e CFO. Mantieni risposte concise e operative.`;
@@ -63,9 +98,9 @@ async function cycle(){
  if(busy)return; if(!engine){toast('Prima carica l’AI');return} busy=true; $('#runCycle').textContent='NOVA lavora…';
  try{
   const base=`Cassa ${eur(cash())}; profitto netto ${eur(profit())}; giorni rimasti ${daysLeft()}; spese totali ${eur(state.spent)}; incassi ${eur(state.income)}; tempo umano max 15 min/giorno. Memoria: ${state.memory||'nessuna'}.`;
-  const scout=await ask([{role:'user',content:`AGENTE SCOUT. ${base}\nGenera 3 opportunità realistiche a costo zero o quasi che possano aumentare il capitale. Non inventare domanda di mercato non verificata. Per ogni idea indica cosa va verificato online prima di agire.`}],600,.55);
-  const critic=await ask([{role:'user',content:`AGENTE CRITICO. ${base}\nValuta duramente queste proposte dello Scout. Elimina quelle che richiedono troppo tempo, capitale, customer care o dipendono da assunzioni non verificate. Scegli massimo 2 candidati.\n\nSCOUT:\n${scout}`}],600,.25);
-  const cfo=await ask([{role:'user',content:`AGENTE CFO/STRATEGA. ${base}\nSulla base dell'analisi seguente, scegli UNA prossima azione concreta eseguibile in <=15 minuti dal proprietario oppure preparabile da te. Se serve una spesa, proponila chiaramente con importo, titolo, motivo, rischio e ritorno atteso. Se non serve spendere scrivi SPESA: 0. Non fingere di poter effettuare pagamenti o pubblicazioni.\n\nANALISI:\n${critic}`}],700,.25);
+  const scout=await ask([{role:'user',content:`AGENTE SCOUT. ${base}\nGenera 3 opportunità realistiche a costo zero o quasi che possano aumentare il capitale. Non inventare domanda di mercato non verificata. Per ogni idea indica cosa va verificato online prima di agire.`}],500,.5);
+  const critic=await ask([{role:'user',content:`AGENTE CRITICO. ${base}\nValuta duramente queste proposte dello Scout. Elimina quelle che richiedono troppo tempo, capitale, customer care o dipendono da assunzioni non verificate. Scegli massimo 2 candidati.\n\nSCOUT:\n${scout}`}],450,.25);
+  const cfo=await ask([{role:'user',content:`AGENTE CFO/STRATEGA. ${base}\nSulla base dell'analisi seguente, scegli UNA prossima azione concreta eseguibile in <=15 minuti dal proprietario oppure preparabile da te. Se serve una spesa, proponila chiaramente con importo, titolo, motivo, rischio e ritorno atteso. Se non serve spendere scrivi SPESA: 0. Non fingere di poter effettuare pagamenti o pubblicazioni.\n\nANALISI:\n${critic}`}],550,.25);
   state.messages.push({role:'assistant',content:`CICLO AUTONOMO\n\n${cfo}`});
   const m=cfo.match(/SPESA\s*:\s*€?\s*(\d+(?:[.,]\d+)?)/i); const amount=m?Number(m[1].replace(',','.')):0;
   if(amount>0){state.approvals.push({id:crypto.randomUUID(),amount,title:'Spesa proposta da NOVA',reason:cfo,risk:'da valutare',humanTime:'≤15 min',status:'pending',ts:Date.now()});}

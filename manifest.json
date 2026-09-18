@@ -1,0 +1,10 @@
+{
+  "name":"NOVA Personal AI",
+  "short_name":"NOVA",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#0b0d10",
+  "theme_color":"#0b0d10",
+  "description":"Assistente AI personale locale, privato e senza abbonamenti.",
+  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

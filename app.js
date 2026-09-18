@@ -131,7 +131,7 @@ async function send(){
  const idx=state.messages.length-1; save();
  try{
    busy=true; $('#send').textContent='…'; render();
-   const history=recentContext().slice(0,-1);
+   const history=recentContext().slice(0,-2);
    const reply=await ai([
      {role:'system',content:SYSTEM},
      {role:'system',content:situation()},

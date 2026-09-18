@@ -9,12 +9,12 @@
   <title>NOVA — Personal AI</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon.svg" />
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=8" />
 </head>
 <body>
   <header>
     <div>
-      <div class="eyebrow">PRIVATE • LOCAL • ZERO SUBSCRIPTIONS</div>
+      <div class="eyebrow">WEB • CLOUD AI • ZERO API KEYS</div>
       <h1>NOVA</h1>
     </div>
     <span id="status" class="pill">offline</span>
@@ -40,13 +40,12 @@
     <section class="card">
       <div class="row between">
         <div>
-          <div class="label">CERVELLO LOCALE</div>
-          <h3 id="modelName">Non caricato</h3>
+          <div class="label">CERVELLO ONLINE GRATUITO</div>
+          <h3 id="modelName">AI cloud gratuita</h3>
         </div>
-        <button id="loadModel">Carica AI</button>
+        <button id="connectAI">Attiva NOVA</button>
       </div>
-      <div class="progress"><div id="progressBar"></div></div>
-      <small id="progressText">NOVA prova prima un modello più capace e lo accetta solo se supera un test qualità.</small>
+      <small id="progressText">Nessun download e nessun server tuo. Al primo avvio NOVA chiede solo l’autorizzazione Puter.</small>
     </section>
 
     <nav class="tabs">
@@ -84,7 +83,7 @@
 
     <section id="memory" class="panel">
       <div class="card inner">
-        <h3>Memoria privata</h3>
+        <h3>Memoria privata sul telefono</h3>
         <textarea id="memoryText" rows="10" placeholder="Preferenze, vincoli, competenze, cose che NOVA deve ricordare…"></textarea>
         <button id="saveMemory">Salva sul telefono</button>
       </div>
@@ -100,6 +99,7 @@
   </main>
 
   <div id="toast"></div>
-  <script type="module" src="app.js?v=3"></script>
+  <script src="https://js.puter.com/v2/"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

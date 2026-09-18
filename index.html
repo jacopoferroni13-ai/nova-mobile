@@ -9,7 +9,7 @@
   <title>NOVA — Personal AI</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon.svg" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=3" />
 </head>
 <body>
   <header>
@@ -46,7 +46,7 @@
         <button id="loadModel">Carica AI</button>
       </div>
       <div class="progress"><div id="progressBar"></div></div>
-      <small id="progressText">NOVA sceglierà automaticamente il modello più adatto al telefono.</small>
+      <small id="progressText">NOVA proverà prima un modello mobile leggero e, se necessario, una modalità ultra-light.</small>
     </section>
 
     <nav class="tabs">
@@ -100,6 +100,6 @@
   </main>
 
   <div id="toast"></div>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=3"></script>
 </body>
 </html>

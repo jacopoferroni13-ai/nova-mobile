@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0d10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>NOVA — Personal AI</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <div class="eyebrow">PRIVATE • LOCAL • ZERO SUBSCRIPTIONS</div>
+      <h1>NOVA</h1>
+    </div>
+    <span id="status" class="pill">offline</span>
+  </header>
+
+  <main>
+    <section class="hero card">
+      <div>
+        <div class="label">MISSIONE</div>
+        <h2>€100 → profitto in 90 giorni</h2>
+        <p>Autonomia finanziaria bloccata fino a €1.000 di profitto netto verificato.</p>
+      </div>
+      <button id="runCycle" class="primary">Avvia ciclo AI</button>
+    </section>
+
+    <section class="grid stats">
+      <div class="card stat"><span>Cassa</span><strong id="cash">€100,00</strong></div>
+      <div class="card stat"><span>Profitto netto</span><strong id="profit">€0,00</strong></div>
+      <div class="card stat"><span>Spese</span><strong id="spent">€0,00</strong></div>
+      <div class="card stat"><span>Giorni</span><strong id="days">90</strong></div>
+    </section>
+
+    <section class="card">
+      <div class="row between">
+        <div>
+          <div class="label">CERVELLO LOCALE</div>
+          <h3 id="modelName">Non caricato</h3>
+        </div>
+        <button id="loadModel">Carica AI</button>
+      </div>
+      <div class="progress"><div id="progressBar"></div></div>
+      <small id="progressText">NOVA sceglierà automaticamente il modello più adatto al telefono.</small>
+    </section>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="chat">Chat</button>
+      <button class="tab" data-tab="approvals">Approvazioni <span id="approvalCount"></span></button>
+      <button class="tab" data-tab="ledger">Cassa</button>
+      <button class="tab" data-tab="memory">Memoria</button>
+    </nav>
+
+    <section id="chat" class="panel active">
+      <div id="messages" class="messages"></div>
+      <div class="composer">
+        <textarea id="input" placeholder="Scrivi a NOVA…"></textarea>
+        <button id="send" class="primary">Invia</button>
+      </div>
+    </section>
+
+    <section id="approvals" class="panel">
+      <div id="approvalList"></div>
+      <p class="muted">NOVA non può spendere da sola. Dopo €1.000 netti potrai valutare se sbloccare micro-spese.</p>
+    </section>
+
+    <section id="ledger" class="panel">
+      <div class="card inner">
+        <h3>Registra movimento reale</h3>
+        <div class="grid two">
+          <select id="txType"><option value="income">Incasso</option><option value="expense">Spesa</option></select>
+          <input id="txAmount" type="number" step="0.01" min="0" placeholder="Importo €" />
+        </div>
+        <input id="txNote" placeholder="Nota" />
+        <button id="addTx">Registra</button>
+      </div>
+      <div id="ledgerList"></div>
+    </section>
+
+    <section id="memory" class="panel">
+      <div class="card inner">
+        <h3>Memoria privata</h3>
+        <textarea id="memoryText" rows="10" placeholder="Preferenze, vincoli, competenze, cose che NOVA deve ricordare…"></textarea>
+        <button id="saveMemory">Salva sul telefono</button>
+      </div>
+      <div class="card inner">
+        <h3>Regole fisse</h3>
+        <p>• Budget iniziale: €100</p>
+        <p>• Durata: 90 giorni</p>
+        <p>• Tempo umano: max 15 min/giorno</p>
+        <p>• Ogni spesa richiede approvazione manuale fino a €1.000 netti</p>
+        <p>• No scommesse, leva, truffe, spam o attività illegali</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
